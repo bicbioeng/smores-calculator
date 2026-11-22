@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>SMORES Graphene Calculator</title>
 <!-- Bootstrap 5.3.3 (MIT) and Chart.js 4.4.1 (MIT) are embedded so the file works offline -->
 <style>@charset "UTF-8";/*!
@@ -32,7 +35,20 @@ thead .col-sel{color:var(--bs-primary)}
 .city-input{width:90px;margin-left:auto;text-align:right}
 .nav-tabs .nav-link{white-space:nowrap}
 @media (max-width:991.98px){.side-sticky{position:static}}
-@media (max-width:575.98px){.stat strong{font-size:1.15rem}.chart-box{height:230px}.table-matrix th[scope=row]{min-width:150px}}
+@media (max-width:575.98px){
+  .stat strong{font-size:1.1rem}.stat .card-body{padding:.75rem}
+  .chart-box{height:240px}.chart-box.tall{height:280px}
+  .table-matrix th[scope=row]{min-width:140px}
+  .form-control,.form-select,.input-group-text{font-size:16px}
+  .table-matrix input,.city-input{min-height:44px;font-size:16px}
+  .btn{min-height:44px}
+  .navbar .btn{flex:1}
+  .navbar .d-flex.gap-2{width:100%}
+  .container-xl.py-4{padding-top:1rem!important}
+  .only-sel [data-col]:not(.col-sel){display:none}
+  .card-body{padding:.9rem}
+}
+@media (max-width:991.98px){#calc .card-body{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 .75rem}#calc .mb-3,#calc .mb-4{margin-bottom:.75rem!important}#calc .full{grid-column:1/-1}}
 </style>
 </head>
 <body>
@@ -65,27 +81,27 @@ thead .col-sel{color:var(--bs-primary)}
       <form class="card shadow-sm side-sticky" id="calc" onsubmit="return false">
         <div class="card-header bg-white fw-semibold">Calculator</div>
         <div class="card-body">
-          <div class="mb-3">
+          <div class="mb-3 full">
             <label for="stream" class="form-label">Waste stream</label>
             <select id="stream" class="form-select"></select>
           </div>
-          <div class="mb-3">
+          <div class="mb-3 full">
             <label for="city" class="form-label">South Dakota city</label>
             <select id="city" class="form-select"></select>
           </div>
           <div class="mb-3">
-            <label for="bench" class="form-label">Commercial graphene price</label>
+            <label for="bench" class="form-label">Commercial price</label>
             <div class="input-group"><span class="input-group-text">$</span><input id="bench" type="number" class="form-control num" min="0" step="5" inputmode="decimal"><span class="input-group-text">/kg</span></div>
           </div>
           <div class="mb-3">
             <label for="demand" class="form-label">Target demand</label>
             <div class="input-group"><input id="demand" type="number" class="form-control num" min="0" step="100" inputmode="decimal"><span class="input-group-text">kg/yr</span></div>
           </div>
-          <div class="mb-4">
+          <div class="mb-4 full">
             <label for="cont" class="form-label">Contingency</label>
             <div class="input-group"><input id="cont" type="number" class="form-control num" min="0" step="1" inputmode="decimal"><span class="input-group-text">%</span></div>
           </div>
-          <button class="btn btn-outline-secondary w-100" id="btn-reset" type="button">Reset to defaults</button>
+          <button class="btn btn-outline-secondary w-100 full" id="btn-reset" type="button">Reset to defaults</button>
         </div>
       </form>
     </aside>
@@ -149,8 +165,9 @@ thead .col-sel{color:var(--bs-primary)}
 
         <section class="tab-pane fade" id="p-assume" role="tabpanel">
           <h2 class="h5 mb-1">Waste stream assumptions</h2>
-          <p class="text-body-secondary small mb-3">Edit any value to use your own lab or literature numbers. Charts update instantly. The highlighted column is the selected stream.</p>
-          <div class="card shadow-sm mb-4"><div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0 table-matrix" id="matrix"></table></div></div>
+          <p class="text-body-secondary small mb-2">Edit any value to use your own lab or literature numbers. Charts update instantly. The highlighted column is the selected stream.</p>
+          <div class="form-check form-switch d-sm-none mb-2"><input class="form-check-input" type="checkbox" role="switch" id="show-all"><label class="form-check-label" for="show-all">Show all five streams</label></div>
+          <div class="card shadow-sm mb-4"><div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0 table-matrix only-sel" id="matrix"></table></div></div>
           <h2 class="h5 mb-1">City size factors</h2>
           <p class="text-body-secondary small mb-3">Waste supply relative to Rapid City (1.00).</p>
           <div class="card shadow-sm"><div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0" id="ctable"></table></div></div>
@@ -280,37 +297,52 @@ Chart.defaults.plugins.legend.labels.boxWidth=12;
 const gridY={color:'#eef0f2'},noGrid={display:false};
 const money=v=>usd(v,2);
 const C={};
-function mk(id,cfg){C[id]=new Chart($(id),cfg)}
-
-mk('ch-vs',{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[BLUE,DARK],borderRadius:4,barThickness:36}]},
-  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.raw)+' per kg'}}},
-    scales:{x:{beginAtZero:true,grid:gridY,ticks:{callback:v=>'$'+v}},y:{grid:noGrid}}}});
-
-mk('ch-cost',{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderRadius:4}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.raw)+' per kg'}}},
-    scales:{y:{beginAtZero:true,grid:gridY,ticks:{callback:v=>'$'+v}},x:{grid:noGrid}}}});
-
 const BREAK=[['e','Collection','#0d6efd'],['f','Preprocessing','#6ea8fe'],['g','Energy','#fd7e14'],['h','Labor + overhead','#ffc107'],['i','Disposal credit','#198754']];
-mk('ch-break',{type:'bar',data:{labels:[],datasets:BREAK.map(b=>({label:b[1],data:[],backgroundColor:b[2],stack:'s'}))},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{mode:'index',callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}/kg`}}},
-    scales:{x:{stacked:true,grid:noGrid},y:{stacked:true,grid:gridY,ticks:{callback:v=>'$'+v}}}}});
+const kfmt=v=>Math.abs(v)>=1000?fmt(v/1000)+'k':v;
+let narrow=null;
+function makeCharts(nw){
+  Object.values(C).forEach(c=>c.destroy());
+  const fs=nw?11:12, tk=extra=>Object.assign({font:{size:fs},maxRotation:nw?0:50,autoSkip:true},extra||{});
+  const valAxis=(cb,extra)=>Object.assign({beginAtZero:true,grid:{color:'#eef0f2'},ticks:tk({callback:cb})},extra||{});
+  const catAxis=()=>({grid:{display:false},ticks:tk()});
+  const legend={position:'bottom',labels:{boxWidth:12,font:{size:fs}}};
+  const mk=(id,cfg)=>{C[id]=new Chart($(id),cfg)};
+  const base={responsive:true,maintainAspectRatio:false};
 
-mk('ch-pot',{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderRadius:4}]},
-  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)+' kg/yr'}}},
-    scales:{x:{beginAtZero:true,grid:gridY,ticks:{callback:v=>v>=1000?fmt(v/1000)+'k':v}},y:{grid:noGrid}}}});
+  mk('ch-vs',{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[BLUE,DARK],borderRadius:4,maxBarThickness:40}]},
+    options:{...base,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.raw)+' per kg'}}},
+      scales:{x:valAxis(v=>'$'+v),y:catAxis()}}});
 
-mk('ch-city',{data:{labels:[],datasets:[
-    {type:'bar',label:'Graphene potential',data:[],backgroundColor:[],borderRadius:4,order:2},
-    {type:'line',label:'Target demand',data:[],borderColor:RED,borderDash:[6,4],borderWidth:2,pointRadius:0,order:1}]},
-  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kg/yr`}}},
-    scales:{y:{beginAtZero:true,grid:gridY,ticks:{callback:v=>v>=1000?fmt(v/1000)+'k':v}},x:{grid:noGrid}}}});
+  mk('ch-cost',{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderRadius:4}]},
+    options:{...base,indexAxis:nw?'y':'x',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.raw)+' per kg'}}},
+      scales:nw?{x:valAxis(v=>'$'+v),y:catAxis()}:{y:valAxis(v=>'$'+v),x:catAxis()}}});
 
-mk('ch-yield',{type:'line',data:{labels:[],datasets:[
-    {label:'Your pathway',data:[],borderColor:BLUE,backgroundColor:'rgba(13,110,253,.08)',fill:true,tension:.25,borderWidth:2,pointRadius:[],pointBackgroundColor:BLUE},
-    {label:'Commercial price',data:[],borderColor:DARK,borderDash:[6,4],borderWidth:2,pointRadius:0}]},
-  options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-    plugins:{legend:{position:'bottom'},tooltip:{callbacks:{title:i=>`Conversion ${i[0].label}%`,label:c=>`${c.dataset.label}: ${money(c.raw)}/kg`}}},
-    scales:{x:{title:{display:true,text:'Conversion of carbon to graphene (%)'},grid:noGrid,ticks:{maxTicksLimit:10}},y:{beginAtZero:true,grid:gridY,ticks:{callback:v=>'$'+v}}}}});
+  mk('ch-break',{type:'bar',data:{labels:[],datasets:BREAK.map(b=>({label:b[1],data:[],backgroundColor:b[2],stack:'s'}))},
+    options:{...base,plugins:{legend,tooltip:{mode:'index',callbacks:{label:c=>`${c.dataset.label}: ${money(c.raw)}/kg`}}},
+      scales:{x:{...catAxis(),stacked:true},y:{...valAxis(v=>'$'+v),beginAtZero:false,stacked:true}}}});
+
+  mk('ch-pot',{type:'bar',data:{labels:[],datasets:[{data:[],backgroundColor:[],borderRadius:4}]},
+    options:{...base,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)+' kg/yr'}}},
+      scales:{x:valAxis(kfmt),y:catAxis()}}});
+
+  mk('ch-city',{data:{labels:[],datasets:[
+      {type:'bar',label:'Graphene potential',data:[],backgroundColor:[],borderRadius:4,order:2},
+      {type:'line',label:'Target demand',data:[],borderColor:RED,borderDash:[6,4],borderWidth:2,pointRadius:0,order:1}]},
+    options:{...base,indexAxis:nw?'y':'x',plugins:{legend,tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${fmt(c.raw)} kg/yr`}}},
+      scales:nw?{x:valAxis(kfmt),y:catAxis()}:{y:valAxis(kfmt),x:catAxis()}}});
+
+  mk('ch-yield',{type:'line',data:{labels:[],datasets:[
+      {label:'Your pathway',data:[],borderColor:BLUE,backgroundColor:'rgba(13,110,253,.08)',fill:true,tension:.25,borderWidth:2,pointRadius:[],pointBackgroundColor:BLUE},
+      {label:'Commercial price',data:[],borderColor:DARK,borderDash:[6,4],borderWidth:2,pointRadius:0}]},
+    options:{...base,interaction:{mode:'index',intersect:false},
+      plugins:{legend,tooltip:{callbacks:{title:i=>`Conversion ${i[0].label}%`,label:c=>`${c.dataset.label}: ${money(c.raw)}/kg`}}},
+      scales:{x:{...catAxis(),title:{display:true,text:'Conversion of carbon to graphene (%)',font:{size:fs}},ticks:tk({maxTicksLimit:nw?6:10})},y:valAxis(v=>'$'+v)}}});
+}
+function applyLayout(force){
+  const nw=window.matchMedia('(max-width:575.98px)').matches;
+  if(nw===narrow&&!force)return;narrow=nw;makeCharts(nw);render();
+}
+window.addEventListener('resize',()=>applyLayout());
 
 /* ---------- render ---------- */
 function render(){
@@ -383,7 +415,7 @@ async function copyText(t,msg){
     try{document.execCommand('copy');toast(msg)}catch(_){toast('Your browser blocked copying')}ta.remove()}
 }
 
-fill();render();
+fill();applyLayout(true);
 // charts in hidden tabs need a resize when shown
 document.querySelectorAll('[data-bs-toggle=tab]').forEach(t=>t.addEventListener('shown.bs.tab',()=>Object.values(C).forEach(c=>c.resize())));
 
@@ -394,6 +426,7 @@ $('city').addEventListener('change',e=>{S.city=+e.target.value;render()});
 $('stream').addEventListener('change',e=>{S.stream=+e.target.value;render()});
 $('matrix').addEventListener('input',e=>{const t=e.target;if(t.dataset.p){S.streams[+t.dataset.k][t.dataset.p]=n(t.value);render()}});
 $('ctable').addEventListener('input',e=>{const t=e.target;if(t.dataset.c){S.cities[+t.dataset.c][1]=n(t.value);render()}});
+$('show-all').addEventListener('change',e=>$('matrix').classList.toggle('only-sel',!e.target.checked));
 $('btn-reset').addEventListener('click',()=>{S=copyOf(DEFAULTS);fill();render();toast('Defaults restored')});
 $('btn-copy').addEventListener('click',()=>{const M=compute(),s=M.sel;copyText([
   `SMORES III waste-to-graphene summary: ${s.n}, ${S.cities[S.city][0]}`,
